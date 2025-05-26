@@ -1,2 +1,5 @@
 # 환경변수
 .env
+__pychache__
+__pycache__/
+*.py[cod]
