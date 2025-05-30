@@ -9,7 +9,7 @@ def requirement_excel_loader(file_path: str) -> str:
     요구사항 정의서 CSV 파일을 전체 로드하여 기능 추출용 텍스트로 반환합니다.
     각 요구사항명 + 설명을 하나의 텍스트로 구성하여 반환합니다.
     """
-    df = pd.read_csv(file_path, encoding="cp949")
+    df = pd.read_csv(file_path, encoding="utf-8")
 
     if "요구사항 설명" not in df.columns or "요구사항명" not in df.columns:
         raise ValueError("'요구사항 설명'과 '요구사항명' 열이 존재해야 합니다.")
