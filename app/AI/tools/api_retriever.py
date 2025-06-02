@@ -1,63 +1,42 @@
 from typing import List, Dict
 from langchain_core.tools import tool
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.vectorstores import FAISS
-from langchain_openai import OpenAIEmbeddings
 from langchain_core.documents import Document
 import yaml
 import os
 
-# 🔧 YAML을 Document 리스트로 변환
-def yaml_to_documents(yaml_path: str) -> List[Document]:
+
+# 🔧 YAML 전체를 문서 형태가 아닌 문자열로 직접 반환
+def extract_all_api_info(yaml_path: str) -> str:
     with open(yaml_path, "r", encoding="utf-8") as f:
         data = yaml.safe_load(f)
 
-    docs = []
+    output = []
     for path, methods in data.get("paths", {}).items():
         for method, details in methods.items():
             summary = details.get("summary", "")
             responses = details.get("responses", {})
             parameters = details.get("parameters", [])
 
-            inputs = [f"{p.get('name')}: {p.get('description', '')}" for p in parameters]
-            outputs = [f"{code}: {r.get('description', '')}" for code, r in responses.items()]
+            inputs = [f"- {p.get('name')}: {p.get('description', '')}" for p in parameters]
+            outputs = [f"- {code}: {r.get('description', '')}" for code, r in responses.items()]
 
-            content = f"""### {method.upper()} {path}
-설명: {summary}
+            section = f"""### {method.upper()} {path}
+설명: {summary or '없음'}
 입력:
-{chr(10).join(inputs) or '없음'}
+{chr(10).join(inputs) or '- 없음'}
 
 출력:
-{chr(10).join(outputs) or '없음'}
+{chr(10).join(outputs) or '- 없음'}
 """
-            docs.append(Document(page_content=content, metadata={"api_path": path}))
-    return docs
+            output.append(section)
 
-# 🔧 리트리버 생성 함수
-def create_yaml_retriever(yaml_path: str):
-    documents = yaml_to_documents(yaml_path)
-    splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
-    split_docs = splitter.split_documents(documents)
+    return "\n\n".join(output)
 
-    embeddings = OpenAIEmbeddings()
-    vectorstore = FAISS.from_documents(split_docs, embeddings)
 
-    return vectorstore.as_retriever(search_kwargs={"k": 5})
-
-# ✅ LLM 툴 등록
+# ✅ 전체 API 내용을 단일 호출로 반환하는 툴
 @tool
-def yaml_search(query: str, file_path: str) -> List[Dict[str, str]]:
+def get_full_api_info(file_path: str) -> Dict[str, str]:
     """
-    Search the specified OpenAPI YAML file for information related to the input query.
-    Useful for extracting API info such as inputs and outputs for a specific feature.
+    전체 OpenAPI YAML 파일을 기반으로 모든 API 정보를 요약된 텍스트 형식으로 반환합니다.
     """
-    retriever = create_yaml_retriever(file_path)
-    docs = retriever.invoke(query)
-
-    return [{"content": doc.page_content, "source": doc.metadata.get("api_path", "unknown")} for doc in docs]
-
-yaml_search.name = "yaml_search"
-yaml_search.description = (
-    "Search a specified OpenAPI YAML file for relevant API info related to a given feature. "
-    "Requires the path to the YAML file and a query like '회원가입 API'."
-)
+    return {"content": extract_all_api_info(file_path)}

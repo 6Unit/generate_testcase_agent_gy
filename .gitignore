@@ -3,3 +3,4 @@
 __pychache__
 __pycache__/
 *.py[cod]
+/app/AI/sourcecode/
