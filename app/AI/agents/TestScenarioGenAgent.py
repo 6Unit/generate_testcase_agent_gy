@@ -24,7 +24,7 @@ class TestScenarioGenerationAgent:
 
         if os.path.exists(self.output_csv_path):
             os.remove(self.output_csv_path)
-            print("🧹 기존 테스트 케이스 CSV 파일 초기화 완료")
+            print("🧹 기존 통합테스트시나리오 CSV 파일 초기화 완료")
 
     def run(self, input_data: dict):
         input_text = input_data.get("input")
@@ -51,7 +51,7 @@ class TestScenarioGenerationAgent:
         self._save_to_csv(parsed_rows)
 
         result_text = "\n".join([
-            f"{i+1}. {r['시나리오메']} ({r['시나리오 ID']})"
+            f"{i+1}. {r['시나리오명']} ({r['시나리오 ID']})"
             for i, r in enumerate(parsed_rows)
         ])
         print(f"\n✅ 전체 시나리오 요약:\n{result_text}")
@@ -77,8 +77,8 @@ class TestScenarioGenerationAgent:
 
             records.append({
                 "시나리오 ID": scenario_id,
-                "시나리오\uba54": name,
-                "상세설명(흉릿도)": flow,
+                "시나리오명": name,
+                "상세설명(흐름도)": flow,
                 "검증포인트": numbered_checks
             })
 

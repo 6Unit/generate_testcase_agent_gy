@@ -7,7 +7,6 @@ from typing import TypedDict, Dict, Any
 from AI.agents.TestScenarioGenAgent import TestScenarioGenerationAgent
 from AI.agents.TestCaseGenAgent import TestCaseGenerationAgent
 from AI.agents.TestCaseValidationAgent import TestCaseValidationAgent
-from AI.agents.TestCaseCorrectionAgent import TestCaseCorrectionAgent  # ✅ 추가
 
 # ✅ 경로 설정
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -24,7 +23,6 @@ class AgentState(TypedDict):
     input: str
     file_path: str
     output: str
-    validation_results: list[dict]  # ✅ 추가 (검증 결과 전달용)
 
 # ✅ 테스트 케이스 생성 노드
 def run_test_case_generation(state: AgentState) -> Dict[str, Any]:
@@ -56,12 +54,6 @@ def run_test_case_validation(state: AgentState) -> Dict[str, Any]:
     }
 
 
-# ✅ 테스트케이스 수정 노드
-def run_test_case_correction(state: AgentState) -> Dict[str, Any]:
-    agent = TestCaseCorrectionAgent(case_csv_path=CASE_CSV_PATH)
-    msg = agent.run(state["validation_results"])  # ✅ 검증 결과 기반 수정
-    return {"output": msg, "validation_results": state["validation_results"]}
-
 # ✅ 시나리오 생성 노드
 def run_scenario_generation(state: AgentState) -> Dict[str, Any]:
     agent = TestScenarioGenerationAgent()
@@ -76,13 +68,11 @@ def build_graph():
     builder = StateGraph(AgentState)
     builder.add_node("run_test_case_generation", run_test_case_generation)
     builder.add_node("run_test_case_validation", run_test_case_validation)
-    builder.add_node("run_test_case_correction", run_test_case_correction)
     builder.add_node("run_scenario_generation", run_scenario_generation)
 
     builder.set_entry_point("run_test_case_generation")
     builder.add_edge("run_test_case_generation", "run_test_case_validation")
-    builder.add_edge("run_test_case_validation", "run_test_case_correction")  # ✅ 연결
-    builder.add_edge("run_test_case_correction", "run_scenario_generation")  # ✅ 연결
+    builder.add_edge("run_test_case_validation", "run_scenario_generation")
     builder.set_finish_point("run_scenario_generation")
 
     return builder.compile()
@@ -96,8 +86,7 @@ if __name__ == "__main__":
 
     result = graph.invoke({
         "input": "요구사항 정의서를 바탕으로 테스트 케이스들을 생성해줘.",
-        "file_path": REQUIREMENT_CSV_PATH,
-        "validation_results": []  # ✅ 초기값
+        "file_path": REQUIREMENT_CSV_PATH
     })
 
     end_time = time.time()

@@ -1,10 +1,11 @@
 import re
+import ast
 from openai import OpenAI
 
 client = OpenAI()
 
 def extract_keywords(testcase: dict) -> list[str]:
-    # 1단계: 의미 기반 한국어 키워드 추출
+    # 1단계: 한국어 키워드 추출
     context = "\n".join([
         f"테스트 케이스 설명: {testcase.get('테스트 케이스 내용', '')}",
         f"예상 결과: {testcase.get('예상 결과', '')}"
@@ -19,18 +20,18 @@ def extract_keywords(testcase: dict) -> list[str]:
 - 반환 형식: ["키워드1", "키워드2", ...]
 - 설명 없이 리스트 형태만 출력하세요.
 """
-    response_ko = client.chat.completions.create(
-        model="gpt-4",
-        messages=[{"role": "user", "content": extract_prompt}],
-        temperature=0.3,
-    ).choices[0].message.content.strip()
-
     try:
-        keyword_list_ko = eval(response_ko)
+        response_ko = client.chat.completions.create(
+            model="gpt-4",
+            messages=[{"role": "user", "content": extract_prompt}],
+            temperature=0.3,
+        ).choices[0].message.content.strip()
+
+        keyword_list_ko = ast.literal_eval(response_ko)
     except Exception:
         return []
 
-    # 2단계: 의미 기반 표현 보강
+    # 2단계: 유의어 확장
     synonym_map = {
         "거래": ["거래", "주문", "송장"],
         "문의": ["문의", "연락", "고객지원", "메시지"],
@@ -44,9 +45,9 @@ def extract_keywords(testcase: dict) -> list[str]:
 
     expanded_ko = []
     for kw in keyword_list_ko:
-        expanded_ko.extend(synonym_map.get(kw, [kw]))
+        expanded_ko.extend(synonym_map.get(kw.strip(), [kw.strip()]))
 
-    # 3단계: 영어로 번역
+    # 3단계: 영어 번역
     ko_string = ", ".join(set(expanded_ko))
     translate_prompt = f"""
 다음 한국어 키워드들을 자연스러운 영어로 간결하게 번역하세요. 결과는 쉼표(,)로 구분된 하나의 영어 키워드 목록입니다.
@@ -56,19 +57,22 @@ def extract_keywords(testcase: dict) -> list[str]:
 - 예: profile view, success message, after login
 - 설명 없이 결과만 출력하세요.
 """
-    response_en = client.chat.completions.create(
-        model="gpt-4",
-        messages=[{"role": "user", "content": translate_prompt}],
-        temperature=0.3,
-    ).choices[0].message.content.strip()
+    try:
+        response_en = client.chat.completions.create(
+            model="gpt-4",
+            messages=[{"role": "user", "content": translate_prompt}],
+            temperature=0.3,
+        ).choices[0].message.content.strip()
+    except Exception:
+        return []
 
-    # 4단계: 의미 있는 단어만 정제 + 불필요한 단어 제거
+    # 4단계: 정제 및 필터링
     raw_keywords = re.findall(r'\b[a-zA-Z_][a-zA-Z0-9_]*\b', response_en)
     filtered_keywords = [
         kw.lower() for kw in raw_keywords
         if len(kw) >= 4 and kw.lower() not in {
-            "user", "data", "info", "test", "input", "value", "page", "screen", "click", "view","import"
+            "user", "data", "info", "test", "input", "value", "page", "screen", "click", "view", "import"
         }
     ]
 
-    return list(set(filtered_keywords))
+    return sorted(set(filtered_keywords))
