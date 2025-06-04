@@ -36,7 +36,7 @@ def run_test_case_generation(state: AgentState) -> Dict[str, Any]:
 
 # ✅ 테스트케이스 검증 노드
 def run_test_case_validation(state: AgentState) -> Dict[str, Any]:
-    source_dir = os.path.join(BASE_DIR, "app", "AI", "sourcecode","UI")
+    source_dir = os.path.join(BASE_DIR, "app", "AI", "sourcecode", "UI", "src")
     case_csv_path = os.path.join(BASE_DIR, "app", "AI", "data", "Tool_Shop_테스트케이스.csv")
     agent = TestCaseValidationAgent(source_dir, case_csv_path)
     result = agent.run()
