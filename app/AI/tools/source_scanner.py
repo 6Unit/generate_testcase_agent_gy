@@ -10,7 +10,7 @@ def scan_source_files(
     """지정한 키워드들과 redirect/navigate 경로를 포함하는 소스 코드 라인을 검색합니다."""
 
     if extensions is None:
-        extensions = {".ts", ".html", ".js", ".php", ".py"}
+        extensions = {".ts", ".html", ".js", ".php", ".py", ".json"}
     if ignore_dirs is None:
         ignore_dirs = {"node_modules", ".git", "__pycache__", "i18n", "translations", "transloco"}
 

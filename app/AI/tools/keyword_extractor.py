@@ -75,4 +75,11 @@ def extract_keywords(testcase: dict) -> list[str]:
         }
     ]
 
+    # # ✅ 5단계: 범용 키워드 병합
+    # common_keywords = [
+    #     "required", "invalid", "success", "error", "confirm", "submit",
+    #     "login", "register", "update", "delete", "message", "notfound"
+    # ]
+    
+    # ✅ 최종 키워드 결과
     return sorted(set(filtered_keywords))

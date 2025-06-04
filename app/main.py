@@ -16,7 +16,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REQUIREMENT_CSV_PATH = os.path.join(BASE_DIR, "app", "AI", "data", "Tool_Shop_요구사항정의서.csv")
 SCENARIO_CSV_PATH = os.path.join(BASE_DIR, "app", "AI", "data", "Tool_Shop_통합테스트시나리오.csv")
 YAML_PATH = os.path.join(BASE_DIR, "app", "AI", "data", "Tool_Shop_api.yaml")
-CASE_CSV_PATH = os.path.join(BASE_DIR, "app", "AI", "data", "Tool_Shop_테스트케이스.csv")  # 중복 제거 목적
+CASE_CSV_PATH = os.path.join(BASE_DIR, "app", "AI", "data", "Tool_Shop_테스트케이스.csv") 
 
 # ✅ 상태 정의
 class AgentState(TypedDict):
@@ -36,7 +36,7 @@ def run_test_case_generation(state: AgentState) -> Dict[str, Any]:
 
 # ✅ 테스트케이스 검증 노드
 def run_test_case_validation(state: AgentState) -> Dict[str, Any]:
-    source_dir = os.path.join(BASE_DIR, "app", "AI", "sourcecode", "UI", "src", "app")
+    source_dir = os.path.join(BASE_DIR, "app", "AI", "sourcecode","UI")
     case_csv_path = os.path.join(BASE_DIR, "app", "AI", "data", "Tool_Shop_테스트케이스.csv")
     agent = TestCaseValidationAgent(source_dir, case_csv_path)
     result = agent.run()
